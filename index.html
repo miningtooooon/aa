@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Cloud Miner Pro</title>
+    <title>TON Pro Miner - New Era</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -17,107 +17,91 @@
             user-select: none;
             overflow: hidden;
             height: 100vh;
-            width: 100vw;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
+            border-radius: 24px;
         }
 
         .page { height: 100vh; width: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; padding-bottom: 120px; }
         
-        /* تصميم دائرة التعدين المحدثة */
-        .mining-circle {
-            width: 190px; height: 190px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #0088cc, #002233);
-            display: flex; align-items: center; justify-content: center;
-            position: relative; z-index: 10;
-            border: 2px solid rgba(0, 255, 204, 0.2);
-        }
-
         #liveCounter {
             color: #00ffcc;
-            text-shadow: 0 0 15px rgba(0, 255, 204, 0.8);
-            font-size: 2.3rem;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.8);
+            font-size: 2.5rem;
             font-weight: 900;
         }
 
-        .tab-active { color: #0088cc; position: relative; }
-        .tab-active::after { content: ''; position: absolute; bottom: -5px; left: 20%; width: 60%; height: 3px; background: #0088cc; border-radius: 10px; }
+        .mining-circle {
+            width: 210px; height: 210px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 136, 204, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 30px rgba(0, 136, 204, 0.2);
+            margin-bottom: 2rem;
+        }
 
-        .btn-grad { background: linear-gradient(90deg, #0088cc, #00c6ff); transition: 0.3s; }
-        .btn-grad:active { transform: scale(0.96); }
+        .btn-grad { background: linear-gradient(90deg, #0088cc, #00c6ff); }
+        .tab-active { color: #0088cc; position: relative; }
+        .tab-active::after { 
+            content: ''; position: absolute; bottom: -8px; left: 25%; width: 50%; height: 4px; 
+            background: #0088cc; border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
-        <div onclick="window.checkAdminTrigger()" class="w-12 h-12 glass flex items-center justify-center cursor-pointer active:scale-90 transition">
+        <div class="w-12 h-12 glass flex items-center justify-center">
             <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="w-8">
         </div>
-        <div class="glass px-5 py-2 border-blue-500/20 text-center">
-            <span class="text-[10px] block opacity-60 uppercase font-black">Main Balance</span>
-            <div class="flex items-center gap-1">
-                <span id="balance" class="text-xl font-black text-blue-400">0.0000</span>
-                <span class="text-[10px] font-bold opacity-80">TON</span>
-            </div>
+        <div class="glass px-6 py-2 border-blue-500/20">
+            <span class="text-[10px] block opacity-50 uppercase font-black text-center">Balance</span>
+            <span id="balance" class="text-xl font-black text-blue-400">0.0000</span>
         </div>
     </div>
 
     <div id="page-mining" class="page p-6 flex flex-col justify-center items-center">
-        <div class="mining-container mt-20 mb-10 relative">
-            <div class="mining-circle shadow-[0_0_50px_rgba(0,136,204,0.3)]">
-                <div class="text-center">
-                    <span id="liveCounter" class="block tracking-tighter">0.000000</span>
-                    <span class="text-[9px] uppercase font-bold opacity-50 text-white">TON Mining</span>
-                </div>
+        <div class="mining-circle mt-10">
+            <div class="text-center">
+                <span id="liveCounter" class="block tracking-tighter">0.000000</span>
+                <span class="text-[10px] uppercase font-black opacity-40">TON Cloud Mining</span>
             </div>
         </div>
-        <button onclick="window.startMiningProcess()" id="startBtn" class="w-full max-w-xs py-4 rounded-2xl btn-grad font-black text-lg uppercase shadow-xl">Start Session</button>
+        <button onclick="window.startMining()" id="startBtn" class="w-full max-w-xs py-4 rounded-2xl btn-grad font-black text-lg uppercase shadow-xl active:scale-95 transition">Start Mining</button>
     </div>
 
     <div id="page-referral" class="page hidden p-6 pt-24">
-        <h2 class="text-2xl font-black mb-2 text-orange-400 uppercase text-center">Referral Program</h2>
-        <p class="text-center text-[10px] opacity-50 mb-8 uppercase tracking-widest">Instant commission for every invite</p>
+        <h2 class="text-2xl font-black mb-6 text-orange-400 uppercase text-center">Affiliate System</h2>
         
-        <div class="glass p-6 mb-6 text-center">
-            <p class="text-xs mb-4">Your Link: (Copy and share to earn)</p>
-            <div class="flex gap-2 mb-6">
-                <input id="refLink" type="text" readonly class="flex-1 bg-black/40 p-3 rounded-xl text-[10px] text-center font-mono border-none text-blue-300">
-                <button onclick="window.copyRef()" class="bg-orange-500 px-5 rounded-xl font-bold text-[10px] uppercase active:bg-orange-600">Copy</button>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white/5 p-3 rounded-xl">
-                    <span class="text-[9px] block opacity-50 uppercase">Total Friends</span>
-                    <span id="refCount" class="text-xl font-black">0</span>
-                </div>
-                <div class="bg-white/5 p-3 rounded-xl">
-                    <span class="text-[9px] block opacity-50 uppercase">Earned</span>
-                    <span id="totalRefEarned" class="text-xl font-black text-orange-400">0.0000</span>
-                </div>
-            </div>
+        <div class="glass p-6 mb-8 text-center border-orange-500/20">
+            <p class="text-xs mb-4">اربح <span class="text-orange-400 font-bold">0.001 TON</span> عن كل صديق!</p>
+            <input id="refLink" type="text" readonly class="w-full bg-black/40 p-3 rounded-xl text-[10px] text-center mb-4 border-none text-blue-300 font-mono">
+            <button onclick="window.copyRef()" class="w-full bg-orange-500 py-3 rounded-xl font-bold uppercase text-xs">نسخ الرابط</button>
         </div>
-        <h3 class="text-xs font-bold uppercase mb-4 opacity-40 ml-2">Recent Referrals</h3>
+
+        <div class="flex justify-between px-2 mb-4">
+            <span class="text-xs font-bold opacity-40 uppercase">الفريق الخاص بك</span>
+            <span id="refCount" class="text-xs font-black text-orange-400">0 مستخدم</span>
+        </div>
         <div id="refList" class="space-y-3"></div>
     </div>
 
-    <nav class="fixed bottom-4 left-4 right-4 glass p-2 flex justify-around items-center z-50">
-        <button onclick="window.switchTab('mining', this)" class="flex flex-col items-center py-2 px-4 tab-active">
-            <span class="text-xl">⛏️</span><span class="text-[8px] font-bold uppercase">Mine</span>
+    <nav class="fixed bottom-6 left-6 right-6 glass p-3 flex justify-around items-center z-50">
+        <button onclick="window.switchTab('mining', this)" class="flex flex-col items-center tab-active">
+            <span class="text-xl">⛏️</span><span class="text-[9px] font-bold uppercase mt-1">تعدين</span>
         </button>
-        <button onclick="window.switchTab('referral', this)" class="flex flex-col items-center py-2 px-4 opacity-40">
-            <span class="text-xl">👥</span><span class="text-[8px] font-bold uppercase">Refer</span>
+        <button onclick="window.switchTab('referral', this)" class="flex flex-col items-center opacity-40">
+            <span class="text-xl">👥</span><span class="text-[9px] font-bold uppercase mt-1">إحالات</span>
         </button>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCF6T9Rz0k3YMLVPbkq08Ph1jztg4TC8hM",
@@ -131,62 +115,50 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "dev_test";
+        const firstName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Explorer";
+        const startParam = tg.initDataUnsafe.start_param;
 
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "dev_user";
-        const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Explorer";
-        const startParam = tg.initDataUnsafe.start_param; // البارامتر القادم من الرابط ref_12345
-
-        window.state = { balance: 0.0, miningProfit: 0.0001, refProfit: 0.0005, referrals: [], miningTime: 60 };
+        window.state = { balance: 0.0, referrals: [] };
 
         async function initApp() {
-            const userRef = doc(db, "users", userId);
+            const userRef = doc(db, "vsvs_users", userId);
             const userSnap = await getDoc(userRef);
 
-            if (userSnap.exists()) {
-                window.state = { ...window.state, ...userSnap.data() };
-            } else {
-                // مستخدم جديد - التحقق من الإحالة
-                const newUser = { 
-                    balance: 0, 
-                    miningProfit: 0.0001, 
-                    refProfit: 0.0005, 
-                    referrals: [], 
-                    miningTime: 60,
-                    invitedBy: startParam && startParam.startsWith('ref_') ? startParam.replace('ref_', '') : null
-                };
-
+            if (!userSnap.exists()) {
+                const newUser = { balance: 0, referrals: [], createdAt: Date.now() };
                 await setDoc(userRef, newUser);
-                window.state = { ...window.state, ...newUser };
 
-                // إذا كان هناك شخص قام بدعوته، نرسل له العمولة فوراً
-                if (newUser.invitedBy) {
-                    const referrerRef = doc(db, "users", newUser.invitedBy);
-                    await updateDoc(referrerRef, {
-                        balance: increment(window.state.refProfit),
-                        referrals: arrayUnion({ name: userName, profit: window.state.refProfit, date: Date.now() })
-                    });
+                if (startParam && startParam.startsWith('ref_')) {
+                    const inviterId = startParam.replace('ref_', '');
+                    if (inviterId !== userId) {
+                        const inviterRef = doc(db, "vsvs_users", inviterId);
+                        await updateDoc(inviterRef, {
+                            balance: increment(0.001),
+                            referrals: arrayUnion({ name: firstName, date: Date.now() })
+                        }).catch(e => console.log("Inviter error"));
+                    }
                 }
+                window.state = newUser;
+            } else {
+                window.state = userSnap.data();
             }
             window.renderUI();
         }
 
         window.renderUI = () => {
             document.getElementById('balance').innerText = window.state.balance.toFixed(4);
-            document.getElementById('refCount').innerText = window.state.referrals.length;
-            document.getElementById('totalRefEarned').innerText = (window.state.referrals.length * window.state.refProfit).toFixed(4);
-            document.getElementById('refLink').value = `https://t.me/BNBFaucet20_bot?start=ref_${userId}`;
-
-            const refList = document.getElementById('refList');
-            refList.innerHTML = window.state.referrals.map(r => `
-                <div class="glass p-3 flex justify-between items-center border-none bg-white/5">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-[10px]">👤</div>
-                        <span class="text-xs font-bold">${r.name}</span>
-                    </div>
-                    <span class="text-[10px] text-emerald-400 font-black">+${r.profit} TON</span>
+            document.getElementById('refCount').innerText = `${window.state.referrals.length} مستخدم`;
+            document.getElementById('refLink').value = `https://t.me/Vsvsbsbwbbwb76737_bot?start=ref_${userId}`;
+            
+            const list = document.getElementById('refList');
+            list.innerHTML = window.state.referrals.map(r => `
+                <div class="glass p-4 flex justify-between items-center bg-white/5 border-none">
+                    <span class="text-xs font-bold">${r.name}</span>
+                    <span class="text-[10px] text-emerald-400">+0.001 TON</span>
                 </div>
-            `).join('') || '<p class="text-center opacity-20 text-[10px] py-4">NO FRIENDS YET</p>';
+            `).join('') || '<p class="text-center opacity-20 text-[10px] mt-10">لا يوجد إحالات بعد</p>';
         };
 
         window.switchTab = (page, el) => {
@@ -197,20 +169,19 @@
         };
 
         window.copyRef = () => {
-            const input = document.getElementById('refLink');
-            input.select();
+            const el = document.getElementById('refLink');
+            el.select();
             document.execCommand('copy');
-            tg.showAlert("Referral link copied to clipboard!");
+            tg.showAlert("تم نسخ رابط الإحالة بنجاح!");
         };
 
-        // دالة التعدين المبسطة للعرض
-        window.startMiningProcess = () => {
-            document.getElementById('startBtn').innerText = "Mining Active...";
+        window.startMining = () => {
+            document.getElementById('startBtn').innerText = "تعدين نشط...";
             document.getElementById('startBtn').disabled = true;
-            let current = 0;
+            let v = 0;
             setInterval(() => {
-                current += 0.000001;
-                document.getElementById('liveCounter').innerText = current.toFixed(6);
+                v += 0.000001;
+                document.getElementById('liveCounter').innerText = v.toFixed(6);
             }, 1000);
         };
 
