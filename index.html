@@ -8,48 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top right, #0a1835, #050a18);
-            background-attachment: fixed;
-            color: white;
-            user-select: none;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-        }
-
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #0a1835, #050a18); background-attachment: fixed; color: white; user-select: none; overflow: hidden; height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
         .page { height: 100vh; width: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; padding-bottom: 120px; }
-        
-        #liveCounter {
-            color: #00ffcc;
-            text-shadow: 0 0 20px rgba(0, 255, 204, 0.8);
-            font-size: 2.5rem;
-            font-weight: 900;
-        }
-
-        .mining-circle {
-            width: 210px; height: 210px;
-            border-radius: 50%;
-            border: 2px solid rgba(0, 136, 204, 0.3);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: inset 0 0 30px rgba(0, 136, 204, 0.2);
-            margin-bottom: 2rem;
-        }
-
+        #liveCounter { color: #00ffcc; text-shadow: 0 0 20px rgba(0, 255, 204, 0.8); font-size: 2.5rem; font-weight: 900; }
+        .mining-circle { width: 210px; height: 210px; border-radius: 50%; border: 2px solid rgba(0, 136, 204, 0.3); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 30px rgba(0, 136, 204, 0.2); margin-bottom: 2rem; }
         .btn-grad { background: linear-gradient(90deg, #0088cc, #00c6ff); }
         .tab-active { color: #0088cc; position: relative; }
-        .tab-active::after { 
-            content: ''; position: absolute; bottom: -8px; left: 25%; width: 50%; height: 4px; 
-            background: #0088cc; border-radius: 10px;
-        }
+        .tab-active::after { content: ''; position: absolute; bottom: -8px; left: 25%; width: 50%; height: 4px; background: #0088cc; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -76,13 +42,11 @@
 
     <div id="page-referral" class="page hidden p-6 pt-24">
         <h2 class="text-2xl font-black mb-6 text-orange-400 uppercase text-center">Affiliate System</h2>
-        
         <div class="glass p-6 mb-8 text-center border-orange-500/20">
             <p class="text-xs mb-4">اربح <span class="text-orange-400 font-bold">0.001 TON</span> عن كل صديق!</p>
             <input id="refLink" type="text" readonly class="w-full bg-black/40 p-3 rounded-xl text-[10px] text-center mb-4 border-none text-blue-300 font-mono">
             <button onclick="window.copyRef()" class="w-full bg-orange-500 py-3 rounded-xl font-bold uppercase text-xs">نسخ الرابط</button>
         </div>
-
         <div class="flex justify-between px-2 mb-4">
             <span class="text-xs font-bold opacity-40 uppercase">الفريق الخاص بك</span>
             <span id="refCount" class="text-xs font-black text-orange-400">0 مستخدم</span>
@@ -115,7 +79,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const tg = window.Telegram.WebApp;
-        
+        tg.ready();
+
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "dev_test";
         const firstName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Explorer";
         const startParam = tg.initDataUnsafe.start_param;
@@ -127,20 +92,26 @@
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
-                const newUser = { balance: 0, referrals: [], createdAt: Date.now() };
-                await setDoc(userRef, newUser);
+                // معالجة المستخدم الجديد والإحالة
+                let inviterId = (startParam && startParam.startsWith('ref_')) ? startParam.replace('ref_', '') : null;
+                
+                const newUser = { 
+                    balance: 0, 
+                    referrals: [], 
+                    createdAt: Date.now(),
+                    invitedBy: inviterId 
+                };
 
-                if (startParam && startParam.startsWith('ref_')) {
-                    const inviterId = startParam.replace('ref_', '');
-                    if (inviterId !== userId) {
-                        const inviterRef = doc(db, "vsvs_users", inviterId);
-                        await updateDoc(inviterRef, {
-                            balance: increment(0.001),
-                            referrals: arrayUnion({ name: firstName, date: Date.now() })
-                        }).catch(e => console.log("Inviter error"));
-                    }
-                }
+                await setDoc(userRef, newUser);
                 window.state = newUser;
+
+                if (inviterId && inviterId !== userId) {
+                    const inviterDocRef = doc(db, "vsvs_users", inviterId);
+                    await updateDoc(inviterDocRef, {
+                        balance: increment(0.001),
+                        referrals: arrayUnion({ name: firstName, date: Date.now() })
+                    }).catch(e => console.log("Inviter not found"));
+                }
             } else {
                 window.state = userSnap.data();
             }
@@ -154,7 +125,7 @@
             
             const list = document.getElementById('refList');
             list.innerHTML = window.state.referrals.map(r => `
-                <div class="glass p-4 flex justify-between items-center bg-white/5 border-none">
+                <div class="glass p-4 flex justify-between items-center bg-white/5 border-none mb-2">
                     <span class="text-xs font-bold">${r.name}</span>
                     <span class="text-[10px] text-emerald-400">+0.001 TON</span>
                 </div>
