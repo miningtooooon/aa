@@ -169,5 +169,6 @@ app.post('/api/complete-task', async (req, res) => {
     } else res.status(400).json({ error: 'Already done' });
 });
 
-const PORT = process.env.PORT || 3000; // Use 3000 for Replit stability
-app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server is LIVE on port ${PORT}`));
+
