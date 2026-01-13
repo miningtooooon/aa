@@ -3,15 +3,22 @@ const mongoose = require('mongoose');
 const app = express();
 
 app.use(express.json());
-app.use(express.static('./')); // لعرض ملف index.html تلقائياً
+app.use(express.static('./')); 
 
-// الاتصال بقاعدة البيانات باستخدام المتغير الذي وضعناه في Koyeb
 const mongoURI = process.env.MONGODB_URI;
-mongoose.connect(mongoURI)
-    .then(() => console.log('Connected to MongoDB Atlas'))
-    .catch(err => console.error('Error connecting to MongoDB:', err));
 
-// نموذج بيانات المستخدم
+// التحقق من الرابط قبل الاتصال
+if (!mongoURI) {
+    console.error("خطأ: لم يتم العثور على MONGODB_URI في إعدادات Koyeb!");
+} else {
+    mongoose.connect(mongoURI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    })
+    .then(() => console.log('✅ Connected to MongoDB Atlas'))
+    .catch(err => console.error('❌ Error connecting to MongoDB:', err));
+}
+
 const userSchema = new mongoose.Schema({
     user_id: String,
     balance: { type: Number, default: 0 },
@@ -22,7 +29,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// المسارات (APIs)
 app.get('/api/user/:id', async (req, res) => {
     try {
         const userId = req.params.id;
@@ -48,37 +54,40 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 app.post('/api/start-mining', async (req, res) => {
-    const { user_id } = req.body;
-    const user = await User.findOne({ user_id });
-    if (user) {
-        user.lastMiningStart = new Date();
-        user.isMining = true;
-        await user.save();
-        res.json({ status: 'started' });
-    }
+    try {
+        const { user_id } = req.body;
+        const user = await User.findOne({ user_id });
+        if (user) {
+            user.lastMiningStart = new Date();
+            user.isMining = true;
+            await user.save();
+            res.json({ status: 'started' });
+        }
+    } catch (e) { res.status(500).send(e); }
 });
 
 app.post('/api/collect-mining', async (req, res) => {
-    const { user_id } = req.body;
-    const user = await User.findOne({ user_id });
-    if (user && user.isMining) {
-        const now = new Date();
-        const startTime = new Date(user.lastMiningStart);
-        const diffInMinutes = (now - startTime) / 1000 / 60;
+    try {
+        const { user_id } = req.body;
+        const user = await User.findOne({ user_id });
+        if (user && user.isMining) {
+            const now = new Date();
+            const startTime = new Date(user.lastMiningStart);
+            const diffInMinutes = (now - startTime) / 1000 / 60;
 
-        if (diffInMinutes >= 19.5) {
-            user.balance += 1.0;
-            user.isMining = false;
-            await user.save();
-            res.json({ status: 'success', balance: user.balance });
+            if (diffInMinutes >= 19.5) {
+                user.balance += 1.0;
+                user.isMining = false;
+                await user.save();
+                res.json({ status: 'success', balance: user.balance });
+            } else {
+                res.status(400).json({ status: 'error', message: 'الوقت لم ينتهِ بعد!' });
+            }
         } else {
-            res.status(400).json({ status: 'error', message: 'الوقت لم ينتهِ بعد!' });
+            res.status(400).json({ status: 'error', message: 'لا توجد جلسة نشطة' });
         }
-    } else {
-        res.status(400).json({ status: 'error', message: 'لا توجد جلسة نشطة' });
-    }
+    } catch (e) { res.status(500).send(e); }
 });
 
-// تشغيل السيرفر على المنفذ المتغير
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
