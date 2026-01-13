@@ -3,50 +3,53 @@ const mongoose = require('mongoose');
 const app = express();
 
 app.use(express.json());
+app.use(express.static('./')); // لعرض ملف index.html تلقائياً
 
-// الاتصال بقاعدة البيانات
-mongoose.connect('mongodb://localhost:27017/ton_miner');
+// الاتصال بقاعدة البيانات باستخدام المتغير الذي وضعناه في Koyeb
+const mongoURI = process.env.MONGODB_URI;
+mongoose.connect(mongoURI)
+    .then(() => console.log('Connected to MongoDB Atlas'))
+    .catch(err => console.error('Error connecting to MongoDB:', err));
 
-// نموذج بيانات المستخدم المطور
+// نموذج بيانات المستخدم
 const userSchema = new mongoose.Schema({
     user_id: String,
     balance: { type: Number, default: 0 },
     referrals: { type: Number, default: 0 },
-    lastMiningStart: Date, // لتسجيل وقت بداية الجلسة
+    lastMiningStart: Date,
     isMining: { type: Boolean, default: false }
 });
 
 const User = mongoose.model('User', userSchema);
 
-// 1. جلب بيانات المستخدم وإدارة الإحالات
+// المسارات (APIs)
 app.get('/api/user/:id', async (req, res) => {
-    const userId = req.params.id;
-    const referrerId = req.query.start; // معرف الشخص الذي دعا المستخدم
+    try {
+        const userId = req.params.id;
+        const referrerId = req.query.start;
+        let user = await User.findOne({ user_id: userId });
 
-    let user = await User.findOne({ user_id: userId });
-
-    if (!user) {
-        user = new User({ user_id: userId });
-        
-        // إذا جاء عن طريق رابط إحالة
-        if (referrerId && referrerId !== userId) {
-            const referrer = await User.findOne({ user_id: referrerId });
-            if (referrer) {
-                referrer.referrals += 1;
-                referrer.balance += 2.0; // إضافة مكافأة الإحالة (2 TON)
-                await referrer.save();
+        if (!user) {
+            user = new User({ user_id: userId });
+            if (referrerId && referrerId !== userId) {
+                const referrer = await User.findOne({ user_id: referrerId });
+                if (referrer) {
+                    referrer.referrals += 1;
+                    referrer.balance += 2.0;
+                    await referrer.save();
+                }
             }
+            await user.save();
         }
-        await user.save();
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error" });
     }
-    res.json(user);
 });
 
-// 2. بدء جلسة التعدين في السيرفر
 app.post('/api/start-mining', async (req, res) => {
     const { user_id } = req.body;
     const user = await User.findOne({ user_id });
-    
     if (user) {
         user.lastMiningStart = new Date();
         user.isMining = true;
@@ -55,19 +58,16 @@ app.post('/api/start-mining', async (req, res) => {
     }
 });
 
-// 3. إنهاء الجلسة وإضافة الرصيد (التحقق من الوقت)
 app.post('/api/collect-mining', async (req, res) => {
     const { user_id } = req.body;
     const user = await User.findOne({ user_id });
-
     if (user && user.isMining) {
         const now = new Date();
         const startTime = new Date(user.lastMiningStart);
         const diffInMinutes = (now - startTime) / 1000 / 60;
 
-        // التحقق: هل مرت 20 دقيقة فعلاً؟
-        if (diffInMinutes >= 19.5) { // سماح بـ 30 ثانية فرق بسيط
-            user.balance += 1.0; // إضافة 1 TON فقط
+        if (diffInMinutes >= 19.5) {
+            user.balance += 1.0;
             user.isMining = false;
             await user.save();
             res.json({ status: 'success', balance: user.balance });
@@ -79,4 +79,6 @@ app.post('/api/collect-mining', async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Server is running...'));
+// تشغيل السيرفر على المنفذ المتغير
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
